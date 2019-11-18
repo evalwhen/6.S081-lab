@@ -22,7 +22,7 @@ main(int argc , char* argv[]) {
   } else {
     write(parent_fd[1], "0", 1);
     if (read(child_fd[0], buffer, 1) > 0) {
-      printf("%d: received ping\n", getpid());
+      printf("%d: received pong\n", getpid());
     }
   }
 
