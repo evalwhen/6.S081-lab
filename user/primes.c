@@ -6,6 +6,7 @@
 
 void filter(int fd);
 
+// https://swtch.com/~rsc/thread/
 int
 main(int argc , char* argv[]) {
   int fd[2];
