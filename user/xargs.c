@@ -24,7 +24,7 @@ main(int argc, char* argv[]) {
     exit();
   }
 
-  char line[50];
+  char line[MAX_LINE];
   memset(line, 0, sizeof(line));
   while (read_line(0, line) != 0) {
     /* printf("%s\n", line); */
