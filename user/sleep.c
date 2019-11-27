@@ -11,5 +11,5 @@ main(int argc, char *argv[])
     int seconds = atoi(argv[1]);
     sleep(seconds);
   }
-  exit();
+  exit(0);
 }

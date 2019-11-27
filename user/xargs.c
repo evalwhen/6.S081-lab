@@ -21,7 +21,7 @@ int
 main(int argc, char* argv[]) {
   if (argc < 2) {
     printf("usage: xargs [command]\n");
-    exit();
+    exit(0);
   }
 
   char line[MAX_LINE];
@@ -40,7 +40,7 @@ main(int argc, char* argv[]) {
     if ((pid = fork()) == 0) {
       exec(argv[1], arg);
     }
-    wait();
+    wait(0);
   }
-  exit();
+  exit(0);
 }

@@ -30,7 +30,7 @@ find(char* path, char* pattern) {
     struct stat st;
     if (strlen(path) + 1 + DIRSIZ + 1 > sizeof(buffer)) {
       printf("find: path is too long.\n");
-      exit();
+      exit(0);
     }
     strcpy(buffer, path);
     p = buffer + strlen(path);
@@ -69,5 +69,5 @@ main(int argc, char* argv[]) {
   } else {
     find(argv[1], argv[2]);
   }
-  exit();
+  exit(0);
 }

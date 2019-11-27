@@ -27,7 +27,7 @@ main(int argc , char* argv[]) {
     close(fd[1]);
   }
 
-  exit();
+  exit(0);
 }
 
 void filter(int fd) {
