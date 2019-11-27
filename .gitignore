@@ -21,3 +21,5 @@ xv6.out*
 GPATH
 GRTAGS
 GTAGS
+.vagrant/
+submissions/
