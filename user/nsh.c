@@ -79,6 +79,7 @@ int main(int argc, char* argv[]) {
     }
     wait(0);
   }
+  exit(0);
 }
 
 int parsecmd(char** ss, char* es, struct cmd **cmd) {
@@ -186,6 +187,10 @@ char gettoken(char **pss, char *es, char **pts, char **pte) {
     tok = *s;
     s++;
     break;
+  case '|':
+    tok = *s;
+    s++;
+    break;
   default:
     tok = 'a';
 
@@ -210,12 +215,12 @@ char gettoken(char **pss, char *es, char **pts, char **pte) {
 void runcmd(struct cmd* cmd) {
   struct execcmd* ecmd;
   struct redirectcmd* rcmd;
+  struct pipecmd* pcmd;
 
   switch(cmd->ctype) {
   case EXEC:
     ecmd = (struct execcmd *) cmd;
     /* fprintf(2, "uargv 0: %s\n", ecmd->uargv[0]); */
-    /* fprintf(2, "uargv 1: %s\n", ecmd->uargv[1]); */
     exec(ecmd->uargv[0], ecmd->uargv);
     fprintf(2, "exec faild: %s\n", ecmd->uargv[0]);
     break;
@@ -227,8 +232,36 @@ void runcmd(struct cmd* cmd) {
     open(rcmd->filename, O_CREATE | O_RDWR);
     runcmd(rcmd->cmd);
     break;
-  default:
+  case PIPE:
+    fprintf(2, "entry pipe child\n");
+    pcmd = (struct pipecmd *) cmd;
+    fprintf(2, "left: %s\n", ((struct execcmd *) pcmd->left)->uargv[0]);
+    int fd[2];
+    pipe(fd);
+    if (fork() == 0) {
+      close(1);
+      dup(fd[1]);
+      close(fd[0]);
+      close(fd[1]);
+      runcmd(pcmd->left);
+    }
+    if (fork() == 0) {
+      close(0);
+      dup(fd[0]);
+      close(fd[0]);
+      close(fd[1]);
+      runcmd(pcmd->right);
+    }
+    close(fd[0]);
+    close(fd[1]);
+    wait(0);
+    wait(0);
+    fprintf(2, "end pipe child\n");
+    break;
+
+  default :
     fprintf(2, "unknown cmd type!\n");
     break;
   }
+  exit(0);
 }
