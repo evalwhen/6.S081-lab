@@ -51,7 +51,6 @@ int parsecmd(char** ss, char* es, struct cmd **cmd);
 char gettoken(char **pss, char *es, char **pts, char **pte);
 void runcmd(struct cmd* cmd);
 
-
 int main(int argc, char* argv[]) {
   /* struct pipecmd* pcmd; */
 
@@ -60,6 +59,9 @@ int main(int argc, char* argv[]) {
     struct cmd *cmd;
     write(1, "@ ", 2);
     gets(buffer, MAX_CMD_LEN);
+    if (buffer[0] == '\n') {
+      continue;
+    }
     char* ss = buffer;
     char* es = ss + strlen(buffer);
 
