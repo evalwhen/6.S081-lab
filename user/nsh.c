@@ -7,101 +7,156 @@
 char* uargv[10];
 char buffer[MAX_CMD_LEN];
 
-typedef enum cmd_type {NORMAL, REDIRECT} ctype;
+typedef enum cmd_type {EXEC, REDIRECT, PIPE} ctype;
 
-int parsecmd();
-char gettoken(char **pss, char *es, char **pts, char **pte);
-
-struct {
-  char* uargv[10];
+struct cmd {
   ctype ctype;
+};
+
+struct execcmd {
+  ctype ctype;
+  char* uargv[10];
+} execcmd[10];
+
+int iexeccmd = 0;
+
+struct redirectcmd {
+  ctype ctype;
+  struct cmd *cmd;
   char rechar; // redirect char;
   char* filename; // redirect filename;
   int fd;
-} cmd;
+} redirectcmd[10];
+
+int iredirectcmd = 0;
+
+struct pipecmd {
+  ctype ctype;
+  struct cmd* left;
+  struct cmd* right;
+} pipecmd[10];
+
+int ipipecmd = 0;
+
+//----------------------------------------
+/* struct _cmd { */
+/*   ctype ctype; */
+/*   char* uargv[10]; */
+/*   char rechar; // redirect char; */
+/*   char* filename; // redirect filename; */
+/*   int fd; */
+/* } cmd; */
+
+int parsecmd(char** ss, char* es, struct cmd **cmd);
+char gettoken(char **pss, char *es, char **pts, char **pte);
+void runcmd(struct cmd* cmd);
+
 
 int main(int argc, char* argv[]) {
+  /* struct pipecmd* pcmd; */
 
   while(1) {
+
+    struct cmd *cmd;
     write(1, "@ ", 2);
-    if (!parsecmd()) {
+    gets(buffer, MAX_CMD_LEN);
+    char* ss = buffer;
+    char* es = ss + strlen(buffer);
+
+    if (!parsecmd(&ss, es, &cmd)) {
       continue;
     }
 
     //debug
-    /* fprintf(2, "command: %d\n", strlen(cmd.uargv[0])); */
+    /* fprintf(2, "cmd type: %d\n", cmd->ctype); */
     /* fprintf(2, "command: %s\n", cmd.uargv[1]); */
     /* printf("rechar 1: %d\n", cmd.rechar); */
     /* printf("filename: %s\n", cmd.filename); */
-    if (cmd.ctype == NORMAL) {
-      int pid = fork();
-      if (pid == 0) {
-        exec(cmd.uargv[0], cmd.uargv);
-        fprintf(2, "exec faild: %s\n", cmd.uargv[0]);
-      } else {
-        wait(0);
-      }
-    } else if (cmd.ctype == REDIRECT) {
-      /* fprintf(2, "entering redirect\n"); */
-      int pid = fork();
-      if (pid == 0) {
-        close(cmd.fd);
-        open(cmd.filename, O_CREATE | O_RDWR);
-        exec(cmd.uargv[0], cmd.uargv);
-      } else {
-        wait(0);
-      }
-    } else {
-      continue;
+    if (fork() == 0) {
+      runcmd(cmd);
     }
+    wait(0);
   }
 }
 
-int parsecmd() {
-  memset(cmd.uargv, 0, 10);
-  memset(buffer, 0, MAX_CMD_LEN);
-  cmd.ctype = NORMAL;
+int parsecmd(char** ss, char* es, struct cmd **cmd) {
+  /* memset(cmd.uargv, 0, 10); */
+  /* memset(buffer, 0, MAX_CMD_LEN); */
+  /* gets(buffer, MAX_CMD_LEN); */
 
-  gets(buffer, MAX_CMD_LEN);
-
-  if (buffer[0] == 0) {
+  if ((*ss) == es) {
     return 0;
   }
 
-  char* ss = buffer;
-  char* es = ss + strlen(buffer);
+  /* char* ss = buffer; */
+  /* char* es = ss + strlen(buffer); */
 
   char *ts, *te;
 
   int i = 0;
 
-  while (ss < es) {
-    char tok = gettoken(&ss, es, &ts, &te);
+  struct execcmd *ecmd;
+  ecmd = &execcmd[iexeccmd++];
+  ecmd->ctype = EXEC;
+  *cmd = (struct cmd* ) ecmd;
+
+  while (*ss < es) {
+    char tok = gettoken(ss, es, &ts, &te);
 
     if (tok == 'a') {
-      cmd.uargv[i++] = ts;
+      ecmd->uargv[i++] = ts;
 
     } else if (tok == '>' || tok == '<') {
+      struct redirectcmd *rcmd;
+      rcmd = &redirectcmd[iredirectcmd++];
 
-      cmd.rechar = tok;
-      cmd.ctype = REDIRECT;
-      cmd.fd = (tok == '>' ? 1 : 0);
+      if ((*cmd)->ctype == EXEC) {
+        struct execcmd *ecmd;
+        ecmd = (struct execcmd* )(*cmd);
+        ecmd->uargv[i] = 0;
+        /* i = 0; */
+      }
+      rcmd->cmd = *cmd;
 
-      tok = gettoken(&ss, es, &ts, &te);
+      rcmd->rechar = tok;
+      rcmd->ctype = REDIRECT;
+      rcmd->fd = (tok == '>' ? 1 : 0);
+
+      tok = gettoken(ss, es, &ts, &te);
 
       if (tok != 'a') {
         fprintf(2, "missing redirect filename!\n");
         return 0;
 
       } else {
-        cmd.filename = ts;
+        rcmd->filename = ts;
       }
+
+      *cmd = (struct cmd* ) rcmd;
     } else if (tok == '|') {
-      //TODO: pipeline
+
+      struct pipecmd *pcmd;
+      pcmd = &pipecmd[ipipecmd++];
+      pcmd->ctype = PIPE;
+      pcmd->left = *cmd;
+
+      struct cmd *rcmd;
+      if (!parsecmd(ss, es, &rcmd)) {
+
+        fprintf(2, "whrong right pipe cmd!\n");
+        return 0;
+      } else {
+        pcmd->right = rcmd;
+        *cmd = (struct cmd*) pcmd;
+      }
+
       break;
+    } else {
+
+      fprintf(2, "command syntax error!\n");
+      return 0;
     }
   }
-  cmd.uargv[i] = 0;
 
   return 1;
 }
@@ -148,4 +203,30 @@ char gettoken(char **pss, char *es, char **pts, char **pte) {
   *pss = s;
 
   return tok;
+}
+
+void runcmd(struct cmd* cmd) {
+  struct execcmd* ecmd;
+  struct redirectcmd* rcmd;
+
+  switch(cmd->ctype) {
+  case EXEC:
+    ecmd = (struct execcmd *) cmd;
+    /* fprintf(2, "uargv 0: %s\n", ecmd->uargv[0]); */
+    /* fprintf(2, "uargv 1: %s\n", ecmd->uargv[1]); */
+    exec(ecmd->uargv[0], ecmd->uargv);
+    fprintf(2, "exec faild: %s\n", ecmd->uargv[0]);
+    break;
+
+  case REDIRECT:
+    rcmd = (struct redirectcmd *) cmd;
+
+    close(rcmd->fd);
+    open(rcmd->filename, O_CREATE | O_RDWR);
+    runcmd(rcmd->cmd);
+    break;
+  default:
+    fprintf(2, "unknown cmd type!\n");
+    break;
+  }
 }
