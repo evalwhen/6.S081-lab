@@ -9,26 +9,28 @@ char buffer[MAX_CMD_LEN];
 
 typedef enum cmd_type {NORMAL, REDIRECT} ctype;
 
+int parsecmd();
+char gettoken(char **pss, char *es, char **pts, char **pte);
+
 struct {
   char* uargv[10];
   ctype ctype;
   char rechar; // redirect char;
   char* filename; // redirect filename;
+  int fd;
 } cmd;
-
-int parse_cmd();
 
 int main(int argc, char* argv[]) {
 
   while(1) {
     write(1, "@ ", 2);
-    if (!parse_cmd()) {
+    if (!parsecmd()) {
       continue;
     }
 
     //debug
-    /* fprintf(2, "command: %d\n", cmd.ctype); */
-    /* printf("uargv 1: %s\n", cmd.uargv[1]); */
+    /* fprintf(2, "command: %d\n", strlen(cmd.uargv[0])); */
+    /* fprintf(2, "command: %s\n", cmd.uargv[1]); */
     /* printf("rechar 1: %d\n", cmd.rechar); */
     /* printf("filename: %s\n", cmd.filename); */
     if (cmd.ctype == NORMAL) {
@@ -40,15 +42,14 @@ int main(int argc, char* argv[]) {
         wait(0);
       }
     } else if (cmd.ctype == REDIRECT) {
-      if (cmd.rechar == '>') {
-        int pid = fork();
-        if (pid == 0) {
-          close(1);
-          open(cmd.filename, O_CREATE | O_WRONLY);
-          exec(cmd.uargv[0], cmd.uargv);
-        } else {
-          wait(0);
-        }
+      /* fprintf(2, "entering redirect\n"); */
+      int pid = fork();
+      if (pid == 0) {
+        close(cmd.fd);
+        open(cmd.filename, O_CREATE | O_RDWR);
+        exec(cmd.uargv[0], cmd.uargv);
+      } else {
+        wait(0);
       }
     } else {
       continue;
@@ -56,63 +57,95 @@ int main(int argc, char* argv[]) {
   }
 }
 
-int parse_cmd() {
+int parsecmd() {
   memset(cmd.uargv, 0, 10);
   memset(buffer, 0, MAX_CMD_LEN);
   cmd.ctype = NORMAL;
 
   gets(buffer, MAX_CMD_LEN);
 
-  // 1 = '\n'
-  if (strlen(buffer) - 1 == 0) {
+  if (buffer[0] == 0) {
     return 0;
   }
 
-  int i = 0;
-  uint wlen = 0; // word length
-  uint blankcount = 0;
-  char* c;
+  char* ss = buffer;
+  char* es = ss + strlen(buffer);
 
-  for (c = buffer; *c != '\n'; c++) {
-    if (*c == '<' || *c == '>') {
-      cmd.rechar = *c;
+  char *ts, *te;
+
+  int i = 0;
+
+  while (ss < es) {
+    char tok = gettoken(&ss, es, &ts, &te);
+
+    if (tok == 'a') {
+      cmd.uargv[i++] = ts;
+
+    } else if (tok == '>' || tok == '<') {
+
+      cmd.rechar = tok;
+      cmd.ctype = REDIRECT;
+      cmd.fd = (tok == '>' ? 1 : 0);
+
+      tok = gettoken(&ss, es, &ts, &te);
+
+      if (tok != 'a') {
+        fprintf(2, "missing redirect filename!\n");
+        return 0;
+
+      } else {
+        cmd.filename = ts;
+      }
+    } else if (tok == '|') {
+      //TODO: pipeline
       break;
     }
+  }
+  cmd.uargv[i] = 0;
 
-    if (*c != ' ') {
-      wlen++;
-      blankcount = 0;
-    } else {
-      blankcount++;
-      if (blankcount == 1) {
-        cmd.uargv[i++] = c - wlen;
-        *c = '\0';
-        wlen = 0;
-      }
-    }
+  return 1;
+}
+
+char gettoken(char **pss, char *es, char **pts, char **pte) {
+
+  char *s;
+  char tok;
+
+  s = *pss;
+
+  if (s == es) {
+    return '*';
   }
 
-  // this is a redirect cmd.
-  if (*c == '<' || *c == '>') {
-    wlen = 0;
-    c++;
-    while(*c == ' '){
-      c++;
-    }
-    while(*c != '\n' && *c != ' ') {
-      c++;
-      wlen++;
-    }
-    cmd.filename = c - wlen;
-    *c = '\0';
-    cmd.ctype = REDIRECT;
-  } else {
-
-    if (blankcount == 0) {
-      *c = '\0'; // \n => \0
-      cmd.uargv[i] = c - wlen;
-    }
+  while ( s < es && *s == ' ') {
+    s++;
   }
 
-  return i + 1;
+  *pts = s;
+
+  switch (*s) {
+  case '<':
+  case '>':
+    tok = *s;
+    s++;
+    break;
+  default:
+    tok = 'a';
+
+    /* while (*s != ' ' && *s != '<' && *s != '>') */
+    while (s < es && *s != ' ' && *s != '\n') {
+      s++;
+    }
+    *s = '\0';
+    *pte = s;
+    s++;
+    break;
+  }
+
+  while (s < es && *s == ' ') {
+    s++;
+  }
+  *pss = s;
+
+  return tok;
 }
