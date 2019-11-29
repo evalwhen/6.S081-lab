@@ -1,7 +1,7 @@
 ## mit 6.S081-lab
 
 - [X] Lab Utilities
-- [ ] Lab Shell
+- [X] Lab Shell
 - [ ] Lab Allocator
 - [ ] Lab Lazy allocation
 - [ ] Lab Copy on-write
