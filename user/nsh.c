@@ -2,7 +2,9 @@
 #include "kernel/fcntl.h"
 #include "user/user.h"
 
-#define MAX_CMD_LEN  50
+// don't use malloc.
+
+#define MAX_CMD_LEN  800
 
 char* uargv[10];
 char buffer[MAX_CMD_LEN];
@@ -16,7 +18,7 @@ struct cmd {
 struct execcmd {
   ctype ctype;
   char* uargv[10];
-} execcmd[10];
+} execcmd[MAX_CMD_LEN];
 
 int iexeccmd = 0;
 
@@ -26,7 +28,7 @@ struct redirectcmd {
   char rechar; // redirect char;
   char* filename; // redirect filename;
   int fd;
-} redirectcmd[10];
+} redirectcmd[MAX_CMD_LEN];
 
 int iredirectcmd = 0;
 
@@ -34,7 +36,7 @@ struct pipecmd {
   ctype ctype;
   struct cmd* left;
   struct cmd* right;
-} pipecmd[10];
+} pipecmd[MAX_CMD_LEN];
 
 int ipipecmd = 0;
 
