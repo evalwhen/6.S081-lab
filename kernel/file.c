@@ -57,6 +57,7 @@ filedup(struct file *f)
 void
 fileclose(struct file *f)
 {
+
   acquire(&ftable.lock);
   if(f->ref < 1)
     panic("fileclose");
@@ -64,8 +65,7 @@ fileclose(struct file *f)
     release(&ftable.lock);
     return;
   }
-  f->ref = 0;
-  f->type = FD_NONE;
+
   release(&ftable.lock);
 
   if(f->type == FD_PIPE){
