@@ -38,27 +38,20 @@ struct pipecmd {
 
 int ipipecmd = 0;
 
-//----------------------------------------
-/* struct _cmd { */
-/*   ctype ctype; */
-/*   char* uargv[10]; */
-/*   char rechar; // redirect char; */
-/*   char* filename; // redirect filename; */
-/*   int fd; */
-/* } cmd; */
-
 int parsecmd(char** ss, char* es, struct cmd **cmd);
 char gettoken(char **pss, char *es, char **pts, char **pte);
 void runcmd(struct cmd* cmd);
 
 int main(int argc, char* argv[]) {
-  /* struct pipecmd* pcmd; */
-
   while(1) {
 
     struct cmd *cmd;
     write(1, "@ ", 2);
     gets(buffer, MAX_CMD_LEN);
+    //EOF
+    if (buffer[0] == 0) {
+      break;
+    }
     if (buffer[0] == '\n') {
       continue;
     }
@@ -83,16 +76,10 @@ int main(int argc, char* argv[]) {
 }
 
 int parsecmd(char** ss, char* es, struct cmd **cmd) {
-  /* memset(cmd.uargv, 0, 10); */
-  /* memset(buffer, 0, MAX_CMD_LEN); */
-  /* gets(buffer, MAX_CMD_LEN); */
 
   if ((*ss) == es) {
     return 0;
   }
-
-  /* char* ss = buffer; */
-  /* char* es = ss + strlen(buffer); */
 
   char *ts, *te;
 
@@ -233,9 +220,9 @@ void runcmd(struct cmd* cmd) {
     runcmd(rcmd->cmd);
     break;
   case PIPE:
-    fprintf(2, "entry pipe child\n");
+    /* fprintf(2, "entry pipe child\n"); */
     pcmd = (struct pipecmd *) cmd;
-    fprintf(2, "left: %s\n", ((struct execcmd *) pcmd->left)->uargv[0]);
+    /* fprintf(2, "left: %s\n", ((struct execcmd *) pcmd->left)->uargv[0]); */
     int fd[2];
     pipe(fd);
     if (fork() == 0) {
@@ -256,7 +243,7 @@ void runcmd(struct cmd* cmd) {
     close(fd[1]);
     wait(0);
     wait(0);
-    fprintf(2, "end pipe child\n");
+    /* fprintf(2, "end pipe child\n"); */
     break;
 
   default :

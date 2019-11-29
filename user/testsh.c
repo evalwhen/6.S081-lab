@@ -170,7 +170,7 @@ void
 t2(int *ok)
 {
   printf("simple grep: ");
-  if(one("grep constitute README\n", "The code in the files that constitute xv6 is", 1) == 0){
+  if(one("grep lab README.md\n", "## mit 6.S081-lab\n", 1) == 0){
     printf("FAIL\n");
     *ok = 0;
   } else {
@@ -261,13 +261,13 @@ t6(int *ok)
 {
   printf("both redirections: ");
   unlink("testsh.out");
-  if(one("grep pointers < README > testsh.out\n", "", 1) == 0){
+  if(one("grep lab < README.md > testsh.out\n", "", 1) == 0){
     printf("FAIL\n");
     *ok = 0;
   } else {
     char buf[64];
     readfile("testsh.out", buf, sizeof(buf));
-    if(strstr(buf, "provides pointers to on-line resources") == 0){
+    if(strstr(buf, "## mit 6.S081-lab\n") == 0){
       printf("FAIL\n");
       *ok = 0;
     } else {
@@ -309,13 +309,13 @@ t8(int *ok)
 {
   printf("pipe and redirects: ");
   
-  if(one("grep suggestions < README | wc > testsh.out\n", "", 1) == 0){
+  if(one("grep lab < README.md | wc > testsh.out\n", "", 1) == 0){
     printf("FAIL\n");
     *ok = 0;
   } else {
     char buf[64];
     readfile("testsh.out", buf, sizeof(buf));
-    if(strstr(buf, "1 11 71") == 0){
+    if(strstr(buf, "1 3 18") == 0){
       printf("FAIL\n");
       *ok = 0;
     } else {
@@ -344,13 +344,14 @@ t9(int *ok)
 
   cmd[0] = '\0';
   for(int i = 0; i < 17+(rand()%6); i++){
-    strcpy(cmd + strlen(cmd), "echo x < README > tso\n");
+    strcpy(cmd + strlen(cmd), "echo x < README.md > tso\n");
     strcpy(cmd + strlen(cmd), "echo x | echo\n");
   }
   strcpy(cmd + strlen(cmd), "echo ");
   strcpy(cmd + strlen(cmd), term);
   strcpy(cmd + strlen(cmd), " > tso\n");
   strcpy(cmd + strlen(cmd), "cat < tso\n");
+  /* fprintf(2, "%s\n", cmd); */
 
   if(one(cmd, term, 0) == 0){
     printf("FAIL\n");
