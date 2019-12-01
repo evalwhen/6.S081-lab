@@ -27,7 +27,7 @@ test0() {
     }
     if(pid == 0){
       for(j = 0; j < NFD; j++) {
-        if ((fd = open("README", O_RDONLY)) < 0) {
+        if ((fd = open("README.md", O_RDONLY)) < 0) {
           // the open() failed; exit with -1
           exit(1);
         }

@@ -416,7 +416,7 @@ bd_init(void *base, void *end) {
 void alloc_bit_set(int k, int bi) {
   int bia = bi/2;
 
-  if (bd_sizes[k].alloc[bia]) {
+  if (bit_isset(bd_sizes[k].alloc, bia)) {
     bit_clear(bd_sizes[k].alloc, bia);
   } else {
     bit_set(bd_sizes[k].alloc, bia);
@@ -429,7 +429,7 @@ int alloc_bit_clear(int k, char *p) {
   int bi = blk_index(k, p);
   int bia = bi / 2;
 
-  if (bd_sizes[k].alloc[bia]) {
+  if (bit_isset(bd_sizes[k].alloc, bia)) {
     bit_clear(bd_sizes[k].alloc, bia);
   } else {
     is_buddy_alloced = 1;
@@ -442,5 +442,5 @@ int alloc_bit_isset(int k, int bi) {
   /* 201  */
   int bia = bi / 2;
 
-  return bd_sizes[k].alloc[bia];
+  return bit_isset(bd_sizes[k].alloc, bia);
 }
