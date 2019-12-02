@@ -65,7 +65,6 @@ sys_sbrk(void)
       return -1;
     }
     uvmunmap(p->pagetable, newsize, addr, 1);
-      /* uvmunmap(pagetable_t pagetable, uint64 va, uint64 size, int do_free) */
   }
 
   p->sz = PGROUNDUP(newsize);

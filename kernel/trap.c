@@ -72,7 +72,7 @@ usertrap(void)
     /* p->killed = 1; */
     uint64 va = r_stval();
 
-    if (va > p->sz || va >= TRAPFRAME) {
+    if (va > p->sz) {
       /* printf("usertrap(): va %p overflow process allocated heap\n"); */
       p->killed = 1;
     } else {
