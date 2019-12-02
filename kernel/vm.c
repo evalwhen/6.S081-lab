@@ -292,9 +292,7 @@ freewalk(pagetable_t pagetable)
       freewalk((pagetable_t)child);
       pagetable[i] = 0;
     } else if (PTE_FLAGS(pte) != 0) {
-      pagetable[i] = 0;
-      /* continue; */
-      /* panic("freewalk: leaf"); */
+      panic("freewalk: leaf");
     }
   }
   kfree((void*)pagetable);
