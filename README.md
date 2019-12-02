@@ -3,7 +3,7 @@
 - [X] Lab Utilities
 - [X] Lab Shell
 - [X] Lab Allocator
-- [ ] Lab Lazy allocation
+- [X] Lab Lazy allocation
 - [ ] Lab Copy on-write
 - [ ] Lab Uthread and alarm
 - [ ] Lab Lock
