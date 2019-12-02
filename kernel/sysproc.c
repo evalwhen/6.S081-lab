@@ -41,18 +41,34 @@ sys_wait(void)
 uint64
 sys_sbrk(void)
 {
-  int addr;
-  int n, newsize;
+  long int addr;
+  int n;
+  long int newsize;
   struct proc *p = myproc();
 
   if(argint(0, &n) < 0)
     return -1;
+
   addr = p->sz;
-  newsize = addr + n;
-  if (newsize < 0) {
+  if (addr >= TRAPFRAME) {
     return -1;
   }
-  p->sz = newsize;
+
+  if (n >= 0) {
+    newsize = addr + n;
+    if (newsize >= TRAPFRAME) {
+      return -1;
+    }
+  } else {
+    newsize = addr + n;
+    if (newsize < 0) {
+      return -1;
+    }
+    uvmunmap(p->pagetable, newsize, addr, 1);
+      /* uvmunmap(pagetable_t pagetable, uint64 va, uint64 size, int do_free) */
+  }
+
+  p->sz = PGROUNDUP(newsize);
   return addr;
 }
 

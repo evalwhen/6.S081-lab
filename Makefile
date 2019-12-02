@@ -150,6 +150,7 @@ UPROGS=\
 	$U/_xargs\
 	$U/_alloctest\
 	$U/_nsh\
+	$U/_lazytests\
 
 fs.img: mkfs/mkfs README.md user/xargstest.sh $(UPROGS)
 	mkfs/mkfs fs.img README.md user/xargstest.sh $(UPROGS)
