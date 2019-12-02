@@ -23,8 +23,9 @@ sparse_memory(char *s)
   new_end = prev_end + REGION_SZ;
 
   for (i = prev_end + PGSIZE; i < new_end; i += 64 * PGSIZE)
+    // TODO: 这是什么意思。
     *(char **)i = i;
-
+  char **j = (char **)i;
   for (i = prev_end + PGSIZE; i < new_end; i += 64 * PGSIZE) {
     if (*(char **)i != i) {
       printf("failed to read value from memory\n");
