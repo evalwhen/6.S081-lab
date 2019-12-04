@@ -67,6 +67,31 @@ usertrap(void)
     syscall();
   } else if((which_dev = devintr()) != 0){
     // ok
+  } else if (r_scause() == 15){
+    pte_t *pte;
+    pte = walk(p->pagetable, r_stval(), 0);
+    if (*pte | PTE_OCW) {
+      char* mem;
+      uint64 pa;
+      pa = PTE2PA(*pte);
+      if ((mem = kalloc()) == 0) {
+        printf("usertrap(): out of mem\n");
+        p->killed = 1;
+      } else {
+        memmove(mem, (char* )pa, PGSIZE);
+
+        *pte = 0;
+        kdec((void*)pa);
+        *pte = PA2PTE(mem) | PTE_W | PTE_R | PTE_X | PTE_U | PTE_V;
+        /* kinc((void *)mem); */
+      }
+    } else {
+      printf("not ocw trap\n");
+      printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
+      printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
+      p->killed = 1;
+    }
+
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());

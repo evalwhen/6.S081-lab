@@ -18,6 +18,9 @@ struct run {
   struct run *next;
 };
 
+static int refs[PXP(PHYSTOP)];
+static struct spinlock refs_lock;
+
 struct {
   struct spinlock lock;
   struct run *freelist;
@@ -27,6 +30,10 @@ void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
+  initlock(&refs_lock, "pte_refs");
+  acquire(&refs_lock);
+  memset(refs, 0, sizeof(PXP(PHYSTOP)));
+  release(&refs_lock);
   freerange(end, (void*)PHYSTOP);
 }
 
@@ -79,4 +86,27 @@ kalloc(void)
   if(r)
     memset((char*)r, 5, PGSIZE); // fill with junk
   return (void*)r;
+}
+
+void kinc(void *pa) {
+  /* printf("call kinc: refs=%d\n", refs[PXP(pa)]); */
+
+  acquire(&refs_lock);
+  refs[PXP(pa)] += 1;
+  release(&refs_lock);
+}
+
+void kdec(void *pa) {
+
+  acquire(&refs_lock);
+  /* printf("call kdec: refs %d\n", refs[PXP(pa)]); */
+  if (refs[PXP(pa)] == 0) {
+    /* printf("kdec call kfree\n"); */
+    kfree(pa);
+  } else if (refs[PXP(pa)] > 0) {
+    refs[PXP(pa)] -= 1;
+  } else {
+    panic("kdec2");
+  }
+  release(&refs_lock);
 }
