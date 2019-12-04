@@ -4,7 +4,7 @@
 - [X] Lab Shell
 - [X] Lab Allocator
 - [X] Lab Lazy allocation
-- [ ] Lab Copy on-write
+- [X] Lab Copy on-write(cow branch)
 - [ ] Lab Uthread and alarm
 - [ ] Lab Lock
 - [ ] Lab File system
