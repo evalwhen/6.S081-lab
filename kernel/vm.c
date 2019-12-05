@@ -82,7 +82,8 @@ pte_t *
 walk(pagetable_t pagetable, uint64 va, int alloc)
 {
   if(va >= MAXVA)
-    panic("walk");
+    return 0;
+    /* panic("walk"); */
 
   for(int level = 2; level > 0; level--) {
     pte_t *pte = &pagetable[PX(level, va)];
@@ -378,7 +379,10 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
     va0 = PGROUNDDOWN(dstva);
     pte_t *pte;
     pte = walk(pagetable, va0, 0);
-    if (*pte | PTE_OCW) {
+    if (pte == 0) {
+      return -1;
+    }
+    if (*pte & PTE_OCW) {
       char *mem;
       uint64 pa;
       pa = PTE2PA(*pte);
@@ -393,6 +397,8 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
         *pte = PA2PTE(mem) | PTE_W | PTE_R | PTE_X | PTE_U | PTE_V;
         /* kinc((void *)mem); */
       }
+    } else if ((*pte & PTE_OCW) == 0 && (PTE_FLAGS(*pte) & PTE_W) == 0) {
+      return -1;
     }
 
     pa0 = walkaddr(pagetable, va0);
