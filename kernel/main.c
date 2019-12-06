@@ -26,6 +26,7 @@ main()
     procinit();      // process table
     trapinit();      // trap vectors
     trapinithart();  // install kernel trap vector
+    // TODO: how it works.
     plicinit();      // set up interrupt controller
     plicinithart();  // ask PLIC for device interrupts
     binit();         // buffer cache
