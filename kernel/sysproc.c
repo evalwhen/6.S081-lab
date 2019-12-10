@@ -132,5 +132,7 @@ sys_sigalarm(void)
 }
 
 uint64 sys_sigreturn(void) {
+  memmove(myproc()->tf, myproc()->otf, sizeof(struct trapframe));
+  memset(myproc()->otf, 0, sizeof(struct trapframe));
   return 0;
 }

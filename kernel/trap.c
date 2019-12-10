@@ -106,8 +106,9 @@ usertrap(void)
   if(which_dev == 2) {
     if (p->interval != 0) {
       p->ticked += 1;
-      if (p->interval == p->ticked) {
+      if (p->interval == p->ticked && p->otf->epc == 0) {
         p->ticked = 0;
+        memmove(p->otf, p->tf, sizeof(struct trapframe));
         p->tf->epc = p->handler;
       }
     }

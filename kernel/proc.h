@@ -108,4 +108,5 @@ struct proc {
   int interval;
   uint64 handler;
   int ticked;
+  struct trapframe *otf;
 };
