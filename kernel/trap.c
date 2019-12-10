@@ -103,17 +103,25 @@ usertrap(void)
     exit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+  if(which_dev == 2) {
+    if (p->interval != 0) {
+      p->ticked += 1;
+      if (p->interval == p->ticked) {
+        p->ticked = 0;
+        usertrapret(p->handler);
+      }
+    }
     yield();
+  }
 
-  usertrapret();
+  usertrapret(p->tf->epc);
 }
 
 //
 // return to user space
 //
 void
-usertrapret(void)
+usertrapret(uint64 upc)
 {
   struct proc *p = myproc();
 
@@ -141,7 +149,7 @@ usertrapret(void)
   w_sstatus(x);
 
   // set S Exception Program Counter to the saved user pc.
-  w_sepc(p->tf->epc);
+  w_sepc(upc);
 
   // tell trampoline.S the user page table to switch to.
   uint64 satp = MAKE_SATP(p->pagetable);

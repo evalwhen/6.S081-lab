@@ -20,7 +20,7 @@ exec(char *path, char **argv)
   struct proghdr ph;
   pagetable_t pagetable = 0, oldpagetable;
   struct proc *p = myproc();
-  vmprint(p->pagetable);
+  /* vmprint(p->pagetable); */
 
   begin_op(ROOTDEV);
 
