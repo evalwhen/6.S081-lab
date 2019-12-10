@@ -108,20 +108,20 @@ usertrap(void)
       p->ticked += 1;
       if (p->interval == p->ticked) {
         p->ticked = 0;
-        usertrapret(p->handler);
+        p->tf->epc = p->handler;
       }
     }
     yield();
   }
 
-  usertrapret(p->tf->epc);
+  usertrapret();
 }
 
 //
 // return to user space
 //
 void
-usertrapret(uint64 upc)
+usertrapret()
 {
   struct proc *p = myproc();
 
@@ -149,7 +149,7 @@ usertrapret(uint64 upc)
   w_sstatus(x);
 
   // set S Exception Program Counter to the saved user pc.
-  w_sepc(upc);
+  w_sepc(p->tf->epc);
 
   // tell trampoline.S the user page table to switch to.
   uint64 satp = MAKE_SATP(p->pagetable);
