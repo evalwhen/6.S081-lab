@@ -6,7 +6,7 @@
 - [X] Lab Lazy allocation
 - [X] Lab Copy on-write(cow branch)
 - [X] Lab Uthread and alarm
-- [ ] Lab Lock
+- [X] Lab Lock
 - [ ] Lab File system
 - [ ] Lab mmap
 - [ ] Lab network driver
