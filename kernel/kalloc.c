@@ -59,11 +59,11 @@ void kfree(void *pa) {
   r = (struct run *)pa;
 
   push_off();
-  acquire(&kmem[cpuid()].lock);
+  /* acquire(&kmem[cpuid()].lock); */
   r->next = kmem[cpuid()].freelist;
   kmem[cpuid()].freelist = r;
   kmem[cpuid()].pages += 1;
-  release(&kmem[cpuid()].lock);
+  /* release(&kmem[cpuid()].lock); */
   pop_off();
 }
 
@@ -75,7 +75,7 @@ void *kalloc(void) {
 
   push_off();
   int id = cpuid();
-  acquire(&kmem[id].lock);
+  /* acquire(&kmem[id].lock); */
   r = kmem[id].freelist;
   if (r) {
     kmem[id].freelist = r->next;
@@ -83,7 +83,7 @@ void *kalloc(void) {
   } else {
     r = borrow(id);
   }
-  release(&kmem[id].lock);
+  /* release(&kmem[id].lock); */
   pop_off();
 
   if (r)
